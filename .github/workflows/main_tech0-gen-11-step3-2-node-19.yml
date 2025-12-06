@@ -46,10 +46,21 @@ jobs:
           ls -la ./.next || true
           echo "=== deploy content ==="
           ls -la ./deploy || true
+          # Copy package files and install production dependencies into deploy
+          cp package.json ./deploy/ || true
+          cp package-lock.json ./deploy/ || true
+          if [ -f ./deploy/package.json ]; then
+            echo "Installing production dependencies into ./deploy"
+            npm ci --production --prefix ./deploy || npm install --production --prefix ./deploy || true
+          fi
+          echo "=== deploy node_modules ==="
+          ls -la ./deploy/node_modules || true
 
       - name: Zip artifact for deployment
         run: |
           zip -r release.zip ./deploy
+          echo "=== release.zip content ==="
+          unzip -l release.zip || true
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
