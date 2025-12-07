@@ -35,13 +35,27 @@ jobs:
       #2
       - name: Copy artifact for deployment job
         run: |
-          # deploy/.next まで事前に作っておく（ここが今回のポイント）
+          # deploy/.next まで事前に作成
           mkdir -p ./deploy/.next
-          # standalone 出力一式を deploy 直下へ
+
+          # standalone 出力一式を deploy 直下へコピー
           cp -r ./.next/standalone/. ./deploy
-          # .next/static を Next が期待する場所にコピー
-          # （公式ドキュメントでは .next/standalone/.next/ にコピーするパターン）:contentReference[oaicite:0]{index=0}
-          cp -r ./.next/static ./deploy/.next/
+
+          # Next が「本番ビルドあり」と判断するために必要なファイルを .next 配下へコピー
+          # BUILD_ID（本番ビルド ID）
+          if [ -f "./.next/BUILD_ID" ]; then
+            cp ./.next/BUILD_ID ./deploy/.next/BUILD_ID
+          fi
+
+          # server ディレクトリ（サーバーサイドのビルド成果物）
+          if [ -d "./.next/server" ]; then
+            cp -r ./.next/server ./deploy/.next/server
+          fi
+
+          # 静的ファイル（CSS/JS など）を .next/static にコピー
+          if [ -d "./.next/static" ]; then
+            cp -r ./.next/static ./deploy/.next/static
+          fi
 
       - name: Zip artifact for deployment
         run: zip release.zip ./deploy -r #3    
